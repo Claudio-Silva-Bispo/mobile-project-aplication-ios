@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ScrollView, FlatList } from "react-native";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "../src/firebaseConfig";
 import CustomButton from "../components/CustomButton";
@@ -21,15 +21,53 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
   const [enderecoResidencia, setEnderecoResidencia] = useState<any>({});
   const [enderecoConsulta, setEnderecoConsulta] = useState<any>({});
 
+  const [diaPreferenciaCliente, setDiaPreferenciaCliente] = useState<string[]>([]);
+  // Lista com os dias disponíveis neste momento
+  const listaDiasSemana = [
+    "Segunda",
+    "Terca",
+    "Quarta",
+    "Quinta",
+    "Sexta",
+    "Sábado",
+  ];
+
+  const [turnoPreferenciaCliente, setTurnoPreferenciaCliente] = useState<string[]>([]);
+  // Lista com os turnos disponíveis neste momento
+  const listaTurnos = [
+    "Manhã",
+    "Tarde",
+    "Noite",
+  ];
+
+  const handleSelectDiaPreferenciaCliente = (diaPreferenciaCliente: string) => {
+    setDiaPreferenciaCliente(prevState => {
+      if (prevState.includes(diaPreferenciaCliente)) {
+        return prevState.filter(item => item !== diaPreferenciaCliente);
+      } else {
+        return [...prevState, diaPreferenciaCliente];
+      }
+    });
+  };
+
+  const handleSelectTurnoPreferenciaCliente = (turnoPreferenciaCliente: string) => {
+    setTurnoPreferenciaCliente(prevState => {
+      if (prevState.includes(turnoPreferenciaCliente)) {
+        return prevState.filter(item => item !== turnoPreferenciaCliente);
+      } else {
+        return [...prevState, turnoPreferenciaCliente];
+      }
+    });
+  };
 
   useEffect(() => {
     const buscarDados = async () => {
       try {
-        const dadosCadastraisRef = doc(db, "t_dados_cadastrais", user.uid);
-        const enderecoResidenciaRef = doc(db, "t_endereco_residencia", user.uid);
-        const enderecoConsultaRef = doc(db, "t_endereco_preferencia", user.uid);
-        const diasPreferenciaRef = doc(db, "t_dias_preferencia", user.uid);
-        const turnoPreferenciaRef = doc(db, "t_turno_preferencia", user.uid);
+        const dadosCadastraisRef = doc(db, "t_dados_pessoais_clientes", user.uid);
+        const enderecoResidenciaRef = doc(db, "t_endereco_residencia_cliente", user.uid);
+        const enderecoConsultaRef = doc(db, "t_endereco_preferencia_cliente", user.uid);
+        const diasPreferenciaRef = doc(db, "t_dia_preferencia_cliente", user.uid);
+        const turnoPreferenciaRef = doc(db, "t_turno_preferencia_cliente", user.uid);
   
         const dadosCadastraisSnap = await getDoc(dadosCadastraisRef);
         const enderecoResidenciaSnap = await getDoc(enderecoResidenciaRef);
@@ -46,6 +84,24 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
           ...(turnoPreferenciaSnap.exists() ? turnoPreferenciaSnap.data() : {}),
           idCliente: user.uid,
         }));
+
+        // Carregar dias da semana
+        if (diasPreferenciaSnap.exists()) {
+          setDiaPreferenciaCliente(diasPreferenciaSnap.data().diaPreferenciaCliente || []);
+        }
+
+        // Carregar todas as especialidades disponíveis
+        const diaSemanaDisponiveisRef = doc(db, "t_dia_preferencia_cliente", "todos");
+        const diaSemanaDisponiveisSnap = await getDoc(diaSemanaDisponiveisRef);
+
+        // Carregar turnos
+        if (turnoPreferenciaSnap.exists()) {
+          setTurnoPreferenciaCliente(turnoPreferenciaSnap.data().turnoPreferenciaCliente || []);
+        }
+        
+        // Carregar todos os turnos
+        const turnoDisponiveisRef = doc(db, "t_turno_preferencia_cliente", "todos");
+        const turnoDisponiveisSnap = await getDoc(turnoDisponiveisRef);
   
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
@@ -76,9 +132,6 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
       
       //await updateDoc(docRef, novosDados);
       await updateDoc(docRef, dadosComIdCliente);
-      await updateDoc(doc(db, "t_endereco_residencia", user.uid), enderecoResidencia);
-      await updateDoc(doc(db, "t_endereco_preferencia", user.uid), enderecoConsulta);
-
       setMensagem("✅ Dados atualizados com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar dados:", error);
@@ -87,7 +140,7 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Meus Dados</Text>
 
       {loading ? (
@@ -104,7 +157,7 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
               <TextInput style={styles.input} placeholder="Idade" keyboardType="numeric" value={dados.idade || ""} onChangeText={(text) => setDados({ ...dados, idade: text })} />
               <TextInput style={styles.input} placeholder="Altura (m)" keyboardType="decimal-pad" value={dados.altura || ""} onChangeText={(text) => setDados({ ...dados, altura: text })} />
 
-              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_dados_cadastrais_cliente", dados)} width={'100%'}/>
+              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_dados_pessoais_clientes", dados)} width={'100%'}/>
               
               <TouchableOpacity onPress={() => setStep(2)} style={styles.nextButton}>
                 <Text style={styles.buttonText}>→ Próximo</Text>
@@ -118,26 +171,26 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
               <Text style={styles.sectionTitle}>Endereço de residência</Text>
               
               <TextInput style={styles.input} placeholder="CEP" 
-              value={enderecoResidencia.cepResidencia || ""} 
-              onChangeText={(text) => setDados({ ...enderecoResidencia, cepResidencia: text })} />
+              value={dados.cepResidencia || ""} 
+              onChangeText={(text) => setDados({ ...dados, cepResidencia: text })} />
               
               <TextInput style={styles.input} placeholder="Estado" 
-              value={enderecoResidencia.estadoResidencia || ""} 
-              onChangeText={(text) => setDados({ ...enderecoResidencia, estadoResidencia: text })} />
+              value={dados.estadoResidencia || ""} 
+              onChangeText={(text) => setDados({ ...dados, estadoResidencia: text })} />
               
               <TextInput style={styles.input} placeholder="Cidade" 
-              value={enderecoResidencia.cidadeResidencia || ""} 
-              onChangeText={(text) => setDados({ ...enderecoResidencia, cidadeResidencia: text })} />
+              value={dados.cidadeResidencia || ""} 
+              onChangeText={(text) => setDados({ ...dados, cidadeResidencia: text })} />
               
               <TextInput style={styles.input} placeholder="Rua" 
-              value={enderecoResidencia.ruaResidencia || ""} 
-              onChangeText={(text) => setDados({ ...enderecoResidencia, ruaResidencia: text })} />
+              value={dados.ruaResidencia || ""} 
+              onChangeText={(text) => setDados({ ...dados, ruaResidencia: text })} />
               
               <TextInput style={styles.input} placeholder="Número" 
-              value={enderecoResidencia.numeroResidencia || ""} 
-              onChangeText={(text) => setDados({ ...enderecoResidencia, numeroResidencia: text })} />
+              value={dados.numeroResidencia || ""} 
+              onChangeText={(text) => setDados({ ...dados, numeroResidencia: text })} />
 
-              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_endereco_residencia", enderecoResidencia)} width={'100%'}/>
+              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_endereco_residencia_cliente", dados)} width={'100%'}/>
               
               <TouchableOpacity onPress={() => setStep(1)} style={styles.prevButton}>
                 <Text style={styles.buttonText}>← Voltar</Text>
@@ -152,24 +205,24 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Endereço de preferência para consulta</Text>
               
-              <TextInput style={styles.input} placeholder="CEP" value={enderecoConsulta.cep || ""} onChangeText={(text) => setDados({ ...enderecoConsulta, cepConsultaCliente: text })} />
+              <TextInput style={styles.input} placeholder="CEP" value={dados.cepPreferenciaCliente || ""} onChangeText={(text) => setDados({ ...dados, cepPreferenciaCliente: text })} />
               
               <TextInput style={styles.input} placeholder="Estado" 
-              value={enderecoResidencia.estadoConsultaCliente || ""} 
-              onChangeText={(text) => setDados({ ...enderecoConsulta, estadoConsultaCliente: text })} />
+              value={dados.estadoPreferenciaCliente || ""} 
+              onChangeText={(text) => setDados({ ...dados, estadoPreferenciaCliente: text })} />
               
               <TextInput style={styles.input} placeholder="Cidade" 
-              value={enderecoResidencia.cidadeConsultaCliente || ""} onChangeText={(text) => setDados({ ...enderecoConsulta, cidadeConsultaCliente: text })} />
+              value={dados.cidadePreferenciaCliente || ""} onChangeText={(text) => setDados({ ...dados, cidadePreferenciaCliente: text })} />
               
               <TextInput style={styles.input} placeholder="Rua" 
-              value={enderecoResidencia.ruaConsultaCliente || ""} 
-              onChangeText={(text) => setDados({ ...enderecoConsulta, ruaConsultaCliente: text })} />
+              value={dados.ruaPreferenciaCliente || ""} 
+              onChangeText={(text) => setDados({ ...dados, ruaPreferenciaCliente: text })} />
               
               <TextInput style={styles.input} placeholder="Número" 
-              value={enderecoResidencia.numeroConsultaCliente || ""} 
-              onChangeText={(text) => setDados({ ...enderecoConsulta, numeroConsultaCliente: text })} />
+              value={dados.numeroPreferenciaCliente || ""} 
+              onChangeText={(text) => setDados({ ...dados, numeroPreferenciaCliente: text })} />
               
-              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_endereco_preferencia", enderecoConsulta)} width={'100%'}/>
+              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_endereco_preferencia_cliente", dados)} width={'100%'}/>
               
               <TouchableOpacity onPress={() => setStep(2)} style={styles.prevButton}>
                 <Text style={styles.buttonText}>← Voltar</Text>
@@ -185,9 +238,27 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
           {step === 4 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Dia de preferência</Text>
-              <TextInput style={styles.input} placeholder="Dias da Semana" value={dados.diasSemanaCliente || ""} onChangeText={(text) => setDados({ ...dados, diasSemanaCliente: text })} />
               
-              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_dias_preferencia", dados)} width={'100%'}/>
+              {/*<TextInput style={styles.input} placeholder="Dias da Semana" value={dados.diaPreferenciaCliente || ""} onChangeText={(text) => setDados({ ...dados, diaPreferenciaCliente: text })} />*/}
+
+              <FlatList
+                  data={listaDiasSemana}
+                  keyExtractor={(item) => item}
+                  contentContainerStyle={{ width: "100%" }}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.specialityItem,
+                        diaPreferenciaCliente.includes(item) && styles.selectedSpeciality,
+                      ]}
+                      onPress={() => handleSelectDiaPreferenciaCliente(item)}
+                    >
+                      <Text style={styles.specialityText}>{item}</Text>
+                    </TouchableOpacity>
+                  )}
+              />
+              
+              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_dia_preferencia_cliente", dados)} width={'100%'}/>
               
               <TouchableOpacity onPress={() => setStep(3)} style={styles.prevButton}>
                 <Text style={styles.buttonText}>← Voltar</Text>
@@ -202,9 +273,27 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
           {step === 5 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Turno de preferência</Text>
-              <TextInput style={styles.input} placeholder="Turno" value={dados.turnoCliente || ""} onChangeText={(text) => setDados({ ...dados, turnoCliente: text })} />
+              
+              {/*<TextInput style={styles.input} placeholder="Turno" value={dados.turnoPreferenciaCliente || ""} onChangeText={(text) => setDados({ ...dados, turnoPreferenciaCliente: text })} />*/}
 
-              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_turno_preferencia", dados)} width={'100%'}/>
+              <FlatList
+                data={listaTurnos}
+                keyExtractor={(item) => item}
+                contentContainerStyle={{ width: "100%" }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.specialityItem,
+                      turnoPreferenciaCliente.includes(item) && styles.selectedSpeciality,
+                    ]}
+                    onPress={() => handleSelectTurnoPreferenciaCliente(item)}
+                  >
+                    <Text style={styles.specialityText}>{item}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+
+              <CustomButton title="Atualizar" textColor="#fff" onPress={() => atualizarDados("t_turno_preferencia_cliente", dados)} width={'100%'}/>
               
               <TouchableOpacity onPress={() => setStep(4)} style={styles.prevButton}>
                 <Text style={styles.buttonText}>← Voltar</Text>
@@ -219,7 +308,7 @@ const ConsultarDadosClienteScreen: React.FC<{ navigation: any }> = ({ navigation
       )}
 
       
-    </ScrollView>
+    </View>
   );
 };
 
@@ -295,6 +384,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#fff",
+  },
+  specialityItem: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#08c8f8",
+    borderRadius: 8,
+    marginBottom: 10,
+    width:'100%',
+  },
+  selectedSpeciality: {
+    backgroundColor: "#08c8f8",
+    color:'white',
+  },
+  specialityText: {
+    fontSize: 16,
+    color: "#081828",
+    textAlign: "center",
   },
   
 });

@@ -17,8 +17,11 @@ const atividades = [
   { nome: "1️⃣2️⃣ Indicar a OdontoPrev", descricao: "Compartilhe os benefícios da OdontoPrev com seus amigos e familiares." },
 ];
 
-const AtividadesProgramaBeneficioClienteScreen = () => {
+//const AtividadesProgramaBeneficioClienteScreen = () => {
+  const AtividadesProgramaBeneficioClienteScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+    
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  
 
   const toggleExpand = (index: number) => {
     if (expandedIndex === index) {
@@ -52,6 +55,10 @@ const AtividadesProgramaBeneficioClienteScreen = () => {
 
       <View style={styles.buttonContainer}>
         <CustomButton title="Conheça as Recompensas" onPress={() => navigation.navigate("ProgramaBeneficioCliente")} width={"100%"} textColor="#fff" />
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <CustomButton title="Home" onPress={() => navigation.navigate("SessaoRestritaCliente")} width={"100%"} textColor="#fff" backgroundColor="#f28705"/>
       </View>
 
     </ScrollView>
@@ -101,9 +108,10 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   buttonContainer: {
-    width: "90%",
+    width: "100%",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom:0,
+    marginTop:10,
   },
 });
 

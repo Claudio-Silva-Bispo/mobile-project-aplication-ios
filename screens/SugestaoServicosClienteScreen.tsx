@@ -139,7 +139,12 @@ const SugestaoServicosClienteScreen: React.FC<{ navigation: any }> = ({ navigati
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#f9f9f9" },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    backgroundColor: "#f9f9f9", 
+    width: '100%'
+  },
   scrollContainer: { flexGrow: 1, justifyContent: "center", alignItems: "center" },
   title: { fontSize: 32, fontWeight: "bold", marginBottom: 20, color: "#024059", },
   card: { backgroundColor: "#fff", padding: 15, borderRadius: 10, marginBottom: 15, shadowColor: "#000", shadowOpacity: 0.8 },

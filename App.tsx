@@ -52,6 +52,9 @@ import SobreProgramaBeneficiosScreen from './screens/SobreProgramaBeneficioScree
 import ProgramaBeneficioClienteScreen from './screens/ProgramaBeneficiosClienteScreen';
 import AtividadesProgramaBeneficioClienteScreen from './screens/AtividadesProgramaBeneficioCliente';
 
+// Videos
+import VideoScreen from './screens/ConteudoPreventivoClienteScreen'
+
 const Stack = createStackNavigator();
 
 const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -180,7 +183,8 @@ export default function App() {
           <Stack.Screen name="ProgramaBeneficioCliente" component={ProgramaBeneficioClienteScreen} />
           <Stack.Screen name="AtividadesProgramaBeneficioCliente" component={AtividadesProgramaBeneficioClienteScreen} />
 
-
+          {/* Vídeo */}
+          <Stack.Screen name="ConteudoPreventivoCliente" component={VideoScreen} />
         </Stack.Navigator>
 
       </NavigationContainer>

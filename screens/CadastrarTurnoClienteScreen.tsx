@@ -96,7 +96,7 @@ const CadastrarTurnoPreferenciaClienteScreen: React.FC<{ navigation: any }> = ({
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Meus Dados</Text>
 
       <View style={styles.section}>
@@ -133,7 +133,7 @@ const CadastrarTurnoPreferenciaClienteScreen: React.FC<{ navigation: any }> = ({
         
         {mensagem ? <Text style={styles.mensagem}>{mensagem}</Text> : null}
       
-    </ScrollView>
+    </View>
   );
 };
 

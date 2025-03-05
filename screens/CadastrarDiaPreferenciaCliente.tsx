@@ -99,7 +99,7 @@ const CadastrarDiaPreferenciaClienteScreen: React.FC<{ navigation: any }> = ({ n
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Meus Dados</Text>
 
       <View style={styles.section}>
@@ -136,7 +136,7 @@ const CadastrarDiaPreferenciaClienteScreen: React.FC<{ navigation: any }> = ({ n
         
         {mensagem ? <Text style={styles.mensagem}>{mensagem}</Text> : null}
       
-    </ScrollView>
+    </View>
   );
 };
 
